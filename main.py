@@ -44,7 +44,9 @@ if __name__=="__main__":
         r = query_shapes(url, auth, args.token, g)
         responses.append(r)
 
-    # TESTING: adding fields to geopandas dataframe and exporting as geopkg
+    # TESTING: adding fields to geopandas dataframe and exporting as gpkg
+    print(gdf.head())
+    print(gdf.columns)
 
     # Generate files for export for each uploaded (multi-)polygon
     for r in responses:
