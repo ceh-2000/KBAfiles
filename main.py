@@ -3,6 +3,7 @@ import json
 import fiona
 import pandas as pd
 import seaborn as sns
+import numpy as np
 import matplotlib.pyplot as plt
 import geopandas as gpd
 import requests
@@ -28,21 +29,26 @@ if __name__=="__main__":
     parser.add_argument('--token', type=str, help="Authorization token")
     args = parser.parse_args()
 
+    # Read in geometries from "uploaded" files
     gdf = read_in_files(files[0])
-
     for f in range(1, len(files)):
         cur_gdf = read_in_files(files[f])
         gdf = gdf.merge(cur_gdf, on="geometry", how='outer')
 
+    # Get geometries in WKT format for querying API
     geo_list = gdf["geometry"].to_wkt().tolist()
-    print(type(geo_list[0]))
 
+    # Get responses for uploaded (multi-)polygons
     responses = []
     for g in geo_list:
         r = query_shapes(url, auth, args.token, g)
         responses.append(r)
 
-    print(responses)
+    # TESTING: adding fields to geopandas dataframe and exporting as geopkg
 
-
-
+    # Generate files for export for each uploaded (multi-)polygon
+    for r in responses:
+        # Build dataframe w/all of the taxa info and export as CSV
+        #   - `from_dict` works even when fields aren't all the same... fills w/NaN!
+        taxa_df = pd.DataFrame.from_dict(r['taxa'])
+        taxa_df.to_csv('test_outputs/taxa_test.csv', index = False)
