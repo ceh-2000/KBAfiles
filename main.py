@@ -1,8 +1,11 @@
+#!/usr/bin/python3
+
 import os
 import pandas
 import geopandas as gpd
 import requests
 import warnings
+import argparse
 
 
 def read_in_file(filename, with_kml=False):
@@ -77,17 +80,23 @@ def scope(in_filename, out_filename, token, with_kml=False):
 
 
 if __name__=="__main__":
-    files = {
-        "data/Test_vector.kml" : "output/Test_vector_kml.kml",
-        "data/Test_vector.gpkg": "output/Test_vector_gpkg.gpkg"
-        }
-    #files = ["data/Test_vector.gpkg"]
+    '''
+    Use:
+        main.py input_file output_file your_token
+    
+    Example:
+        main.py data/Test_vector.gpkg output/Test_vector_gpkg.gpkg <your_token>
+    '''
+    parser = argparse.ArgumentParser()
+    parser.add_argument('in_file')
+    parser.add_argument('out_file')
+    parser.add_argument('token')
+    args = parser.parse_args()
     # Reading, editing and writing occurs one file at a time to simplify.
     # For the portal, I would allow uploading and processing one file at a time.
-    for file, output in files.items():
-        scope(
-            in_filename = file,
-            out_filename = output,
-            token = '', # your token here
-            with_kml=True
-            )
+    scope(
+        in_filename = args.in_file,
+        out_filename = args.out_file,
+        token = args.token,
+        with_kml=True
+        )
