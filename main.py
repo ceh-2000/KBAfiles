@@ -41,14 +41,16 @@ def query_shape(token, wkt, url='https://api.keybiodiversityareas.org:8000/v0/sc
         ).json()
 
 
-def scope(in_filename, out_filename, token, with_kml=False):
+def scope(in_filename, name, out_filename, token, with_kml=False):
     '''fully scope a file
     
     Two outputs will be returned: an output gis file (compatible with geopandas)
     and a csv (automatically named from the gis output file name)
     '''
-    # read in file
+    # read in file and check that name field exists
     layer = read_in_file(in_filename, with_kml=with_kml) # see details on the read_file function re KML support.
+    if not name in layer.columns:
+        raise ValueError('name field is absent from the layer')
     # detach layer from file
     layer = layer.copy()
     # read in query metadata
@@ -56,20 +58,24 @@ def scope(in_filename, out_filename, token, with_kml=False):
     # update whole layer with additional typed fields from the metadata query
     # this must be done at the layer level, not at the record level
     for field in metadata_file_fields(metadata):
+        if field in layer.columns:
+            raise ValueError(f'scoping field "{field}" already exists in the layer')
         layer[field] = eval(f'{metadata[field][0]}()')
     # instantiate empty list of taxa results
     taxa = []
     # scope and update layer one feature (row) at a time
-    for index, row in layer.iterrows():
+    for idx, row in layer.iterrows():
         if row['geometry'] is None: # avoids error if some features lack geometry.
-            warnings.warn(f"Feature {index} has no valid geometry: skipping")
+            warnings.warn(f"Feature {idx} has no valid geometry: skipping")
             continue
         # scope feature
         scoping = query_shape(token=token, wkt=row['geometry'].wkt)
+        # add spatial feature name field to scoping
+        scoping['taxa'] = [{name : row[name], **taxarow} for taxarow in scoping['taxa']]
         # update layer with scoped data
         for f in metadata_file_fields(metadata):
             # must write to the original layer as iterrows creates a detached object
-            layer.loc[index, f] = scoping[f]
+            layer.loc[idx, f] = scoping[f]
         # update taxa list
         taxa.extend(scoping['taxa'])
     # write layer
@@ -88,15 +94,17 @@ if __name__=="__main__":
         main.py data/Test_vector.gpkg output/Test_vector_gpkg.gpkg <your_token>
     '''
     parser = argparse.ArgumentParser()
-    parser.add_argument('in_file')
-    parser.add_argument('out_file')
-    parser.add_argument('token')
+    parser.add_argument('--input')
+    parser.add_argument('--name')
+    parser.add_argument('--output')
+    parser.add_argument('--token')
     args = parser.parse_args()
     # Reading, editing and writing occurs one file at a time to simplify.
     # For the portal, I would allow uploading and processing one file at a time.
     scope(
-        in_filename = args.in_file,
-        out_filename = args.out_file,
+        in_filename = args.input,
+        name = args.name,
+        out_filename = args.output,
         token = args.token,
         with_kml=True
         )
