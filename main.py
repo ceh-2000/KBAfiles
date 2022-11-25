@@ -22,8 +22,14 @@ def query_shapes(url, auth, token, wkt):
     response_dict = json.loads(r.text)
     return response_dict
 
+# def test_convert():
+#     filename = "data/Test_vector.json"
+#     gdf = read_in_files(filename)
+#     gdf.to_file('data/new_file.gpkg', driver='GPKG')
+#     sys.exit()
+
 if __name__=="__main__":
-    files = ["data/Multipolygon/Cyprus.gpkg", "data/Multipolygon/Seychelles.gpkg"]
+    files = ["data/Test_vector.geojson", "data/Test_vector.json", "data/Test_vector.kml", "data/Test_vector.zip"]
     url = "https://api.keybiodiversityareas.org:8000/v0/scope"
     auth = "Authorization"
     parser = argparse.ArgumentParser(description='Process some integers.')
