@@ -67,6 +67,8 @@ if __name__=="__main__":
 
         #  exporting new info to gpkg using the original filename
         gpkg_filename = 'test_outputs/' + files[i].split('/')[-1]
+        cur_row = cur_row.drop(columns=["fid"])
+        print(cur_row.columns)
         cur_row.to_file(gpkg_filename, driver = 'GPKG')
 
         # (2) Build dataframe w/all of the taxa info and export as CSV
